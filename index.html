@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0d11">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f6f8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Я не курю">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Я не курю — чек-лист</title>
+<script>
+  (function () {
+    try {
+      var s = JSON.parse(localStorage.getItem('quit-vape-checklist-v1') || '{}');
+      var t = s.theme;
+      if (t !== 'light' && t !== 'dark') {
+        t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) { /* noop */ }
+  })();
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b0d11'/%3E%3Ccircle cx='32' cy='32' r='16' fill='none' stroke='%235eead4' stroke-width='5'/%3E%3Cpath d='M22 34l7 7 14-16' fill='none' stroke='%235eead4' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root, html[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0b0d11;
+    --bg-glow: rgba(94,234,212,.08);
+    --card: #14171d;
+    --card2: #191d24;
+    --ink: #eef1f5;
+    --muted: #98a2b3;
+    --line: #262b33;
+    --line2: #3a414c;
+    --accent: #5eead4;
+    --accent-soft: rgba(94,234,212,.1);
+    --on-accent: #04211d;
+    --amber: #fbbf24;
+    --amber-soft: rgba(251,191,36,.1);
+    --danger: #fb7185;
+    --bar: rgba(11,13,17,.94);
+    --fab-bg: #fbbf24;
+    --fab-ink: #2a1a02;
+    --shadow: 0 10px 30px -12px rgba(0,0,0,.6);
+  }
+  html[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f4f6f8;
+    --bg-glow: rgba(15,118,110,.06);
+    --card: #ffffff;
+    --card2: #f7f9fb;
+    --ink: #12151a;
+    --muted: #5f6b7a;
+    --line: #e3e8ee;
+    --line2: #c9d2dc;
+    --accent: #0f766e;
+    --accent-soft: #e8f6f3;
+    --on-accent: #ffffff;
+    --amber: #b45309;
+    --amber-soft: #fdf3e3;
+    --danger: #be123c;
+    --bar: rgba(244,246,248,.94);
+    --fab-bg: #b45309;
+    --fab-ink: #ffffff;
+    --shadow: 0 1px 2px rgba(16,24,40,.04), 0 12px 28px -18px rgba(16,24,40,.25);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  .chip, .btn, .fab, .icon-btn, .check, .sec-head { touch-action: manipulation; }
+  html { scroll-behavior: smooth; background: var(--bg); -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(780px 380px at 50% -120px, var(--bg-glow), transparent 70%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .app {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 16px 130px;
+  }
+
+  /* ---------- topbar ---------- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    margin: 0 -16px;
+    padding: calc(8px + env(safe-area-inset-top)) 16px 8px;
+    background: var(--bar);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid transparent;
+    transition: border-color .2s;
+  }
+  .topbar.scrolled { border-bottom-color: var(--line); }
+  .topbar-in { display: flex; align-items: center; gap: 10px; max-width: 1040px; margin: 0 auto; }
+  .brand { font-weight: 700; letter-spacing: -.02em; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  .brand .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .brand span { color: var(--muted); font-weight: 500; font-size: .8rem; letter-spacing: .02em; }
+  .top-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    font-size: 1.05rem;
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .icon-btn:active { transform: scale(.96); }
+  .icon-btn.sos {
+    display: none;
+    width: auto;
+    padding: 0 12px;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    color: var(--fab-ink);
+    background: var(--fab-bg);
+    border-color: transparent;
+  }
+  @media (max-width: 759px) {
+    .icon-btn.sos { display: grid; }
+  }
+
+  /* ---------- hero ---------- */
+  .topgrid {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .hero {
+    margin-top: 0;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    background:
+      linear-gradient(140deg, var(--accent-soft), transparent 55%),
+      var(--card);
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "text ring" "date date";
+    gap: 14px;
+    align-items: center;
+    box-shadow: var(--shadow);
+  }
+  .hero-text { grid-area: text; min-width: 0; }
+  .datefield { grid-area: date; display: block; }
+  .day-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 999px;
+    padding: 6px 11px;
+    margin-bottom: 10px;
+  }
+  h1 { margin: 0; font-size: clamp(1.8rem, 7vw, 2.4rem); line-height: 1.02; letter-spacing: -.035em; font-weight: 750; }
+  .hero-sub { margin: 8px 0 14px; color: var(--muted); font-size: .9rem; line-height: 1.45; max-width: 34ch; }
+  .datefield > span { display: block; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--line2);
+    background: var(--card2);
+    color: var(--ink);
+    font: inherit;
+    font-size: 16px;
+  }
+  .ringwrap { grid-area: ring; position: relative; width: 100px; height: 100px; flex: 0 0 auto; }
+  .ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 8; }
+  .ring .bg { stroke: var(--line); }
+  .ring .fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .5s ease; }
+  .ring-label { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+  .ring-label b { font-size: 1.25rem; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .ring-label span { font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+  .stats { display: flex; gap: 8px; }
+  .side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .rule-mini {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--amber);
+    background: var(--amber-soft);
+    border-radius: 16px;
+    padding: 14px 16px;
+  }
+  .rule-mini .label {
+    font-size: .64rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--amber);
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+  .rule-mini p { margin: 0; font-size: .84rem; line-height: 1.45; color: var(--ink); }
+  .stat {
+    flex: 1;
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 14px;
+    padding: 10px 12px;
+  }
+  .stat b { display: block; font-size: 1.05rem; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: .64rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .stats .plan-stat { display: none; }
+
+  /* ---------- chips ---------- */
+  .chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 16px 0 10px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 9px 14px;
+    cursor: pointer;
+  }
+  .chip:active { transform: scale(.97); }
+
+  /* ---------- cards / sections ---------- */
+  main { display: flex; flex-direction: column; gap: 12px; }
+  .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .card {
+    margin-top: 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    scroll-margin-top: 76px;
+    overflow: hidden;
+  }
+  .card-pad { padding: 18px; }
+  .sec-head {
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  .sec-head::-webkit-details-marker { display: none; }
+  #today .sec-head::after { display: none; }
+  .sec-head::after {
+    content: "";
+    width: 8px; height: 8px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg) translateY(-2px);
+    margin-left: 2px;
+    transition: transform .2s;
+    flex: 0 0 auto;
+  }
+  details[open] > .sec-head::after { transform: rotate(-135deg) translateY(-2px); }
+  .sec-title { flex: 1; min-width: 0; }
+  .sec-title h2 { margin: 0; font-size: 1.02rem; letter-spacing: -.015em; font-weight: 680; }
+  .sec-title p { margin: 3px 0 0; font-size: .76rem; color: var(--muted); line-height: 1.35; }
+  .cnt {
+    font-size: .74rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    background: var(--card2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 9px;
+    flex: 0 0 auto;
+  }
+  .card.done .cnt { color: var(--accent); border-color: var(--accent); }
+  .bar { display: block; height: 3px; background: var(--line); }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .35s ease; }
+
+  .checklist { list-style: none; margin: 0; padding: 2px 18px 10px; }
+  .checklist li + li { border-top: 1px solid var(--line); }
+  .check {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-height: 48px;
+    padding: 12px 2px;
+    cursor: pointer;
+    position: relative;
+  }
+  .check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .box {
+    flex: 0 0 24px;
+    width: 24px; height: 24px;
+    border-radius: 8px;
+    border: 1.5px solid var(--line2);
+    background: var(--card);
+    position: relative;
+    margin-top: 1px;
+    transition: background .15s, border-color .15s;
+  }
+  .check input:checked + .box { background: var(--accent); border-color: var(--accent); }
+  .check input:checked + .box::after {
+    content: "";
+    position: absolute;
+    left: 7px; top: 3px;
+    width: 6px; height: 11px;
+    border: solid var(--on-accent);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .check input:focus-visible + .box { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .txt { font-size: .95rem; line-height: 1.45; padding-top: 1px; color: var(--ink); }
+  .check input:checked ~ .txt { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .check.key { background: linear-gradient(90deg, var(--accent-soft), transparent); border-radius: 12px; padding-left: 10px; padding-right: 10px; margin: 2px 0; }
+  .check.key .box { border-color: var(--accent); }
+  .keynote { display: block; font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-top: 2px; }
+
+  .hint { margin: 0 0 12px; color: var(--muted); font-size: .85rem; line-height: 1.5; }
+  .section-note { padding: 0 18px 16px; margin: 0; font-size: .8rem; color: var(--muted); line-height: 1.5; }
+
+  /* ---------- fields ---------- */
+  .field { display: block; margin-top: 12px; }
+  .field > span { display: block; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  textarea {
+    width: 100%;
+    min-height: 96px;
+    resize: vertical;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--line2);
+    background: var(--card2);
+    color: var(--ink);
+    font: inherit;
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  textarea:focus, input[type="date"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  ::placeholder { color: var(--muted); opacity: .75; }
+
+  /* ---------- footer ---------- */
+  .foot { margin-top: 22px; }
+  .foot .hint-card {
+    border: 1px dashed var(--line2);
+    border-radius: 16px;
+    padding: 14px 16px;
+    color: var(--muted);
+    font-size: .82rem;
+    line-height: 1.5;
+  }
+  .foot .hint-card b { color: var(--ink); }
+  .foot-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .btn {
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 600;
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .btn.ghost { color: var(--muted); }
+  .btn:active { transform: scale(.98); }
+  .disclaimer { margin: 18px 0 0; font-size: .74rem; line-height: 1.5; color: var(--muted); }
+
+  /* ---------- help bar ---------- */
+  .helpbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 40;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--bar);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-top: 1px solid var(--line);
+  }
+  .helpbar-in { max-width: 1040px; margin: 0 auto; display: flex; justify-content: flex-end; }
+  .fab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font: inherit;
+    font-size: .92rem;
+    font-weight: 700;
+    color: var(--fab-ink);
+    background: var(--fab-bg);
+    border: 0;
+    border-radius: 999px;
+    padding: 13px 20px;
+    box-shadow: 0 8px 22px -10px rgba(0,0,0,.5);
+    cursor: pointer;
+  }
+  .fab:active { transform: scale(.97); }
+  .fab .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: blink 1.8s infinite; }
+  @keyframes blink { 0%,100% { opacity: 1 } 50% { opacity: .3 } }
+
+  /* ---------- modal ---------- */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(0,0,0,.58);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+  }
+  .overlay.show { display: flex; }
+  .sheet {
+    width: 100%;
+    max-width: 600px;
+    max-height: 92vh;
+    max-height: 92dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 24px 24px 0 0;
+    padding: 20px 18px calc(22px + env(safe-area-inset-bottom));
+    box-shadow: 0 -20px 60px rgba(0,0,0,.4);
+    animation: up .28s cubic-bezier(.2,.7,.3,1);
+  }
+  @keyframes up { from { transform: translateY(28px); opacity: 0 } to { transform: none; opacity: 1 } }
+  .sheet-head { display: flex; align-items: center; gap: 12px; }
+  .sheet-head h2 { margin: 0; font-size: 1.3rem; letter-spacing: -.03em; flex: 1; }
+  .close {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--card2);
+    color: var(--ink);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .sheet p { color: var(--muted); font-size: .88rem; line-height: 1.5; }
+  .timer {
+    text-align: center;
+    font-size: clamp(2.3rem, 12vw, 3.2rem);
+    font-weight: 750;
+    letter-spacing: -.04em;
+    font-variant-numeric: tabular-nums;
+    margin: 8px 0 0;
+    color: var(--ink);
+  }
+  .timer-status { text-align: center; margin: 0 0 12px; font-size: .78rem; color: var(--muted); min-height: 1.2em; }
+  .timer-actions { display: flex; gap: 8px; justify-content: center; }
+  .timer-actions .btn { min-height: 42px; padding: 9px 18px; }
+  .steps { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
+  .steps li {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--card2);
+    border-radius: 12px;
+    font-size: .86rem;
+    line-height: 1.4;
+  }
+  .steps b { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .breath-wrap { text-align: center; margin-top: 18px; }
+  .breath {
+    width: 118px; height: 118px;
+    margin: 8px auto 8px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    border: 1px solid var(--line2);
+    background: radial-gradient(circle at 32% 28%, var(--accent-soft), transparent 70%);
+    color: var(--muted);
+    font-size: .74rem;
+    letter-spacing: .1em;
+    font-weight: 700;
+  }
+  .breath.pulse { animation: breathe 19s ease-in-out infinite; border-color: var(--accent); color: var(--accent); }
+  @keyframes breathe {
+    0% { transform: scale(.72); }
+    21% { transform: scale(1); }
+    58% { transform: scale(1); }
+    100% { transform: scale(.72); }
+  }
+  .breath-cap { margin: 0 0 10px; font-size: .76rem; color: var(--muted); }
+  .modal-why {
+    margin-top: 18px;
+    border-left: 3px solid var(--amber);
+    background: var(--amber-soft);
+    border-radius: 0 12px 12px 0;
+    padding: 12px 14px;
+    font-size: .88rem;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .modal-why span { display: block; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; font-weight: 700; }
+
+  @media (hover: hover) {
+    .check:hover .box { border-color: var(--accent); }
+    .chip:hover { color: var(--ink); border-color: var(--line2); }
+    .btn:hover { border-color: var(--line2); }
+    .icon-btn:hover { border-color: var(--line2); }
+  }
+
+  @media (min-width: 760px) {
+    .topgrid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 250px;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .side { height: 100%; }
+    .stats { flex-direction: column; gap: 10px; }
+    .stat { flex: 0 0 auto; display: flex; flex-direction: column; justify-content: center; }
+    .rule-mini { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .datefield { max-width: 300px; }
+  }
+
+  @media (max-width: 759px) {
+    .rule-mini { display: none; }
+    .helpbar { display: none; }
+    .app { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+  }
+
+  @media (max-width: 519px) {
+    .ringwrap { display: none; }
+    .stats .plan-stat { display: flex; flex-direction: column; justify-content: center; }
+  }
+
+  @media (min-width: 900px) {
+    main { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+  }
+
+  @media (min-width: 720px) {
+    .hero { padding: 26px; }
+    .ringwrap { width: 118px; height: 118px; }
+    .overlay { align-items: center; padding: 24px; }
+    .sheet { border-radius: 24px; border-bottom: 1px solid var(--line); padding: 24px 26px; }
+  }
+  @media (max-width: 360px) {
+    .hero { grid-template-columns: 1fr; grid-template-areas: "text" "date"; }
+    .ringwrap { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-in">
+      <div class="brand"><span class="dot"></span>Я не курю <span>чек-лист</span></div>
+      <div class="top-actions">
+        <button class="icon-btn sos" id="helpBtnTop" type="button" aria-label="Экстренная помощь">SOS</button>
+        <button class="icon-btn" id="themeBtn" type="button" aria-label="Переключить тему">☀</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="topgrid">
+  <section class="hero">
+    <div class="hero-text">
+      <div class="day-badge" id="dayBadge">День 1</div>
+      <h1>Я не курю</h1>
+      <p class="hero-sub" id="heroSub">Только сегодня. Тяга — волна на 3–5 минут.</p>
+    </div>
+    <div class="ringwrap" aria-hidden="true">
+      <svg class="ring" viewBox="0 0 120 120">
+        <circle class="bg" cx="60" cy="60" r="52"></circle>
+        <circle class="fg" id="ringFg" cx="60" cy="60" r="52"></circle>
+      </svg>
+      <div class="ring-label"><b id="planPct">0%</b><span>план</span></div>
+    </div>
+    <label class="datefield">
+      <span>Дата отказа</span>
+      <input type="date" id="quitDate">
+    </label>
+  </section>
+
+  <div class="side">
+  <div class="stats">
+    <div class="stat plan-stat"><b id="planStat">0%</b><span>план</span></div>
+    <div class="stat"><b id="todayStat">0 / 8</b><span>сегодня</span></div>
+    <div class="stat"><b id="cleanStat">0</b><span>чистых дней</span></div>
+  </div>
+  <div class="rule-mini">
+    <div class="label">Правило нуля</div>
+    <p>Ни одной затяжки. Вейп, сигарета, айкос и кальян — один и тот же никотин.</p>
+  </div>
+  </div>
+  </div>
+
+  <nav class="chips" aria-label="Разделы">
+    <button class="chip" type="button" data-target="today">Сегодня</button>
+    <button class="chip" type="button" data-target="why">Причина</button>
+    <button class="chip" type="button" data-target="prep">Подготовка</button>
+    <button class="chip" type="button" data-target="d13">Дни 1–3</button>
+    <button class="chip" type="button" data-target="d47">Дни 4–7</button>
+    <button class="chip" type="button" data-target="w24">Стена</button>
+    <button class="chip" type="button" data-target="m23">Месяц 2–3</button>
+    <button class="chip" type="button" data-target="rel">Если срыв</button>
+    <button class="chip" type="button" data-target="miles">Здоровье</button>
+  </nav>
+
+  <main>
+    <div class="col">
+
+    <!-- СЕГОДНЯ -->
+    <section class="card" id="today">
+      <div class="sec-head" style="cursor:default">
+        <div class="sec-title">
+          <h2>Сегодня</h2>
+          <p id="todayDate">Ежедневный минимум · сбрасывается утром</p>
+        </div>
+        <span class="cnt" id="dailyCnt">0 / 8</span>
+      </div>
+      <span class="bar"><i id="dailyBar"></i></span>
+      <ul class="checklist" style="padding-top:10px">
+        <li><label class="check key"><input type="checkbox" data-daily="d1"><span class="box"></span><span class="txt">Ни капли никотина<span class="keynote">главная галочка дня</span></span></label></li>
+        <li><label class="check"><input type="checkbox" data-daily="d2"><span class="box"></span><span class="txt">Вода 1,5–2 литра</span></label></li>
+        <li><label class="check"><input type="checkbox" data-daily="d3"><span class="box"></span><span class="txt">10 минут движения</span></label></li>
+        <li><label class="check"><input type="checkbox" data-daily="d4"><span class="box"></span><span class="txt">Сон 7–8 часов</span></label></li>
+        <li><label class="check"><input type="checkbox" data-daily="d5"><span class="box"></span><span class="txt">3 приёма еды, с белком</span></label></li>
+        <li><label class="check"><input type="checkbox" data-daily="d6"><span class="box"></span><span class="txt">5 минут дыхания или тишины</span></label></li>
+        <li><label class="check"><input type="checkbox" data-daily="d7"><span class="box"></span><span class="txt">Записал тягу, если была</span></label></li>
+        <li><label class="check"><input type="checkbox" data-daily="d8"><span class="box"></span><span class="txt">Не оставался с этим один</span></label></li>
+      </ul>
+    </section>
+
+    <!-- ПРИЧИНА -->
+    <section class="card card-pad" id="why">
+      <h2 style="margin:0 0 4px;font-size:1.02rem;letter-spacing:-.015em">Моя причина</h2>
+      <p class="hint">Своими словами и конкретно. Это покажется в экстренной помощи и в момент, когда захочется «одну».</p>
+      <label class="field">
+        <span>Почему я бросаю</span>
+        <textarea id="why1" rows="2" placeholder="Например: хочу не задыхаться на лестнице и не зависеть от штуки в кармане"></textarea>
+      </label>
+      <label class="field">
+        <span>Что я получу через год</span>
+        <textarea id="why2" rows="2" placeholder="Например: свободные утра, нормальный сон и деньги на поездку"></textarea>
+      </label>
+    </section>
+
+    <!-- ЗДОРОВЬЕ -->
+    <details class="card sec noplan" id="miles">
+      <summary class="sec-head">
+        <div class="sec-title"><h2>Отметки здоровья</h2><p>Что восстанавливается и когда</p></div>
+        <span class="cnt" data-cnt>0 / 9</span>
+      </summary>
+      <span class="bar"><i data-bar></i></span>
+      <ul class="checklist">
+        <li><label class="check"><input type="checkbox" data-id="m1"><span class="box"></span><span class="txt">20 минут — пульс и давление</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="m2"><span class="box"></span><span class="txt">12 часов — CO в крови</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="m3"><span class="box"></span><span class="txt">24–48 часов — вкус и запах</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="m4"><span class="box"></span><span class="txt">72 часа — никотин выведен</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="m5"><span class="box"></span><span class="txt">2 недели — легче дышать</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="m6"><span class="box"></span><span class="txt">1 месяц — больше энергии</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="m7"><span class="box"></span><span class="txt">3 месяца — рецепторы в норме</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="m8"><span class="box"></span><span class="txt">6 месяцев — редкие волны</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="m9"><span class="box"></span><span class="txt">1 год — риск ИБС вдвое ниже</span></label></li>
+      </ul>
+    </details>
+
+    </div>
+
+    <div class="col">
+
+    <!-- ПОДГОТОВКА -->
+    <details class="card sec" id="prep">
+      <summary class="sec-head">
+        <div class="sec-title"><h2>Подготовка</h2><p>День 0 · до старта</p></div>
+        <span class="cnt" data-cnt>0 / 9</span>
+      </summary>
+      <span class="bar"><i data-bar></i></span>
+      <ul class="checklist">
+        <li><label class="check"><input type="checkbox" data-id="p1"><span class="box"></span><span class="txt">Выбрал дату отказа и записал её</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="p2"><span class="box"></span><span class="txt">Выбросил вейп, картриджи и зарядку</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="p3"><span class="box"></span><span class="txt">Убрал айкос, сигареты и зажигалки из машины и куртки</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="p4"><span class="box"></span><span class="txt">Купил замены: жвачка, зубочистки, эспандер</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="p5"><span class="box"></span><span class="txt">Обсудил с врачом Табекс или НЗТ</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="p6"><span class="box"></span><span class="txt">Сказал 2–3 близким: «Я бросаю»</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="p7"><span class="box"></span><span class="txt">Договорился не курить рядом</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="p8"><span class="box"></span><span class="txt">Решил, что делаю первые 3 утра</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="p9"><span class="box"></span><span class="txt">Убрал алкоголь из первых 3 недель</span></label></li>
+      </ul>
+      <p class="section-note">«Последняя сигарета» — тоже ритуал. Лучше просто выбросить.</p>
+    </details>
+
+    <!-- 1-3 -->
+    <details class="card sec" id="d13">
+      <summary class="sec-head">
+        <div class="sec-title"><h2>Дни 1–3</h2><p>Физический пик · 72 часа</p></div>
+        <span class="cnt" data-cnt>0 / 8</span>
+      </summary>
+      <span class="bar"><i data-bar></i></span>
+      <ul class="checklist">
+        <li><label class="check"><input type="checkbox" data-id="a1"><span class="box"></span><span class="txt">Пью воду весь день, а не когда вспомню</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="a2"><span class="box"></span><span class="txt">Ем регулярно, не натощак</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="a3"><span class="box"></span><span class="txt">При каждой волне — 10 минут ходьбы</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="a4"><span class="box"></span><span class="txt">Дышу 4-7-8, когда накрывает</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="a5"><span class="box"></span><span class="txt">Никаких больших решений и лишних задач</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="a6"><span class="box"></span><span class="txt">Ложусь спать до 23:30</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="a7"><span class="box"></span><span class="txt">Ноль алкоголя</span></label></li>
+        <li><label class="check key"><input type="checkbox" data-id="a8"><span class="box"></span><span class="txt">Не проверяю себя «одной затяжкой»<span class="keynote">правило нуля</span></span></label></li>
+      </ul>
+      <p class="section-note">Пик — 3-й день. Дальше физически будет легче.</p>
+    </details>
+
+    <!-- 4-7 -->
+    <details class="card sec" id="d47">
+      <summary class="sec-head">
+        <div class="sec-title"><h2>Дни 4–7</h2><p>Физика отпускает · работа с ритуалами</p></div>
+        <span class="cnt" data-cnt>0 / 7</span>
+      </summary>
+      <span class="bar"><i data-bar></i></span>
+      <ul class="checklist">
+        <li><label class="check"><input type="checkbox" data-id="b1"><span class="box"></span><span class="txt">Заменил утро: вода, дыхание, душ</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="b2"><span class="box"></span><span class="txt">Заменил начало работы: план на 2 минуты</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="b3"><span class="box"></span><span class="txt">Заменил перерыв: выход без телефона</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="b4"><span class="box"></span><span class="txt">После еды — зубы или жвачка</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="b5"><span class="box"></span><span class="txt">Веду дневник тяги: время, место, эмоция</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="b6"><span class="box"></span><span class="txt">Убрал вейп из поля зрения полностью</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="b7"><span class="box"></span><span class="txt">Нашёл свои 3 главных триггера</span></label></li>
+      </ul>
+    </details>
+
+    <!-- 2-4 недели -->
+    <details class="card sec" id="w24">
+      <summary class="sec-head">
+        <div class="sec-title"><h2>Недели 2–4</h2><p>«Стена» · здесь были срывы</p></div>
+        <span class="cnt" data-cnt>0 / 8</span>
+      </summary>
+      <span class="bar"><i data-bar></i></span>
+      <ul class="checklist">
+        <li><label class="check"><input type="checkbox" data-id="c1"><span class="box"></span><span class="txt">Помню: тяга может быть сильнее — это фаза, не откат</span></label></li>
+        <li><label class="check key"><input type="checkbox" data-id="c2"><span class="box"></span><span class="txt">Не тестирую себя: ноль затяжек<span class="keynote">правило нуля</span></span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="c3"><span class="box"></span><span class="txt">Без алкоголя</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="c4"><span class="box"></span><span class="txt">Не иду в курящие компании</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="c5"><span class="box"></span><span class="txt">Перечитал свою причину</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="c6"><span class="box"></span><span class="txt">Звоню человеку поддержки при тяге</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="c7"><span class="box"></span><span class="txt">Хвалю себя за каждый день</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="c8"><span class="box"></span><span class="txt">Есть план на стрессовую ситуацию</span></label></li>
+      </ul>
+      <p class="section-note">Ты уже проходил эти две недели. Теперь у тебя есть план, а не только сила воли.</p>
+    </details>
+
+    <!-- 2-3 месяца -->
+    <details class="card sec" id="m23">
+      <summary class="sec-head">
+        <div class="sec-title"><h2>Месяц 2–3</h2><p>Новая норма</p></div>
+        <span class="cnt" data-cnt>0 / 7</span>
+      </summary>
+      <span class="bar"><i data-bar></i></span>
+      <ul class="checklist">
+        <li><label class="check"><input type="checkbox" data-id="e1"><span class="box"></span><span class="txt">Ритуалы работают без усилия</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="e2"><span class="box"></span><span class="txt">Тяга только ситуативная и короткая</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="e3"><span class="box"></span><span class="txt">Добавил регулярную нагрузку</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="e4"><span class="box"></span><span class="txt">Посчитал сэкономленные деньги</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="e5"><span class="box"></span><span class="txt">Награда за 1 месяц</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="e6"><span class="box"></span><span class="txt">Награда за 3 месяца</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="e7"><span class="box"></span><span class="txt">Решил, что меняю дальше</span></label></li>
+      </ul>
+    </details>
+
+    <!-- СРЫВ -->
+    <details class="card sec noplan" id="rel">
+      <summary class="sec-head">
+        <div class="sec-title"><h2>Если сорвался</h2><p>Протокол на 24 часа</p></div>
+        <span class="cnt" data-cnt>0 / 6</span>
+      </summary>
+      <span class="bar"><i data-bar></i></span>
+      <ul class="checklist">
+        <li><label class="check"><input type="checkbox" data-id="r1"><span class="box"></span><span class="txt">Остановился сразу, не докурил</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="r2"><span class="box"></span><span class="txt">Выбросил остатки</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="r3"><span class="box"></span><span class="txt">Записал: что было до — место, люди, эмоция</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="r4"><span class="box"></span><span class="txt">Сделал одну правку в плане</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="r5"><span class="box"></span><span class="txt">Сказал человеку</span></label></li>
+        <li><label class="check"><input type="checkbox" data-id="r6"><span class="box"></span><span class="txt">Вернулся в план сегодня, не с понедельника</span></label></li>
+      </ul>
+      <p class="section-note">Срыв — это данные, а не приговор. Одна затяжка не отменяет две недели.</p>
+      <div style="padding:0 18px 18px">
+        <button class="btn" id="restartBtn" type="button">Начать заново с сегодня</button>
+      </div>
+    </details>
+
+    </div>
+
+  </main>
+
+  <footer class="foot">
+    <div class="hint-card">
+      <b>Как пользоваться:</b> открывается в браузере на телефоне и компьютере. На iPhone — «Поделиться» → «На экран Домой». Отметки сохраняются в этом браузере, интернет не нужен.
+    </div>
+    <div class="foot-actions">
+      <button class="btn" id="shareBtn" type="button" hidden>Поделиться ссылкой</button>
+      <button class="btn ghost" id="resetChecks" type="button">Сбросить отметки</button>
+      <button class="btn ghost" id="resetAll" type="button">Сбросить всё</button>
+    </div>
+    <p class="disclaimer">Это не медицинская консультация. По препаратам и сильной тревоге — к врачу. Отметки хранятся только в браузере и никуда не отправляются.</p>
+  </footer>
+
+</div>
+
+<div class="helpbar">
+  <div class="helpbar-in">
+    <button class="fab" id="helpBtn" type="button"><span class="pulse-dot"></span>Накрыло?</button>
+  </div>
+</div>
+
+<div class="overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="helpTitle">Накрыло?</h2>
+      <button class="close" id="closeHelp" type="button" aria-label="Закрыть">✕</button>
+    </div>
+    <p>Это волна, а не приказ. Она поднимется и спадёт за 3–5 минут. Ничего не решай — просто пройди шаги.</p>
+
+    <div class="timer" id="timer">10:00</div>
+    <p class="timer-status" id="timerStatus">10 минут — и волна спадёт.</p>
+    <div class="timer-actions">
+      <button class="btn" id="timerToggle" type="button">Пауза</button>
+      <button class="btn ghost" id="timerReset" type="button">Сброс</button>
+    </div>
+
+    <ol class="steps">
+      <li><b>01</b><span>Стоп. Не спорь и не ищи вейп.</span></li>
+      <li><b>02</b><span>6 медленных выдохов. Выдох длиннее вдоха.</span></li>
+      <li><b>03</b><span>Вода или почистить зубы.</span></li>
+      <li><b>04</b><span>Смени место на 5 минут: выйди, пройдись.</span></li>
+      <li><b>05</b><span>«Это волна. Пик через 3 минуты. Я не курю».</span></li>
+    </ol>
+
+    <div class="breath-wrap">
+      <div class="breath" id="breath">4 · 7 · 8</div>
+      <p class="breath-cap">Вдох 4 · задержка 7 · выдох 8</p>
+      <button class="btn ghost" id="breathBtn" type="button">Дышать</button>
+    </div>
+
+    <div class="modal-why">
+      <span>Моя причина</span>
+      <div id="modalWhy">Пока не заполнено — напиши её в блоке «Моя причина».</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var KEY = 'quit-vape-checklist-v1';
+  var C = 2 * Math.PI * 52;
+  var TIMER_MS = 10 * 60 * 1000;
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* noop */ }
+  }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function todayKey() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+
+  var state = load();
+  if (!state.checks) state.checks = {};
+  if (!state.daily || typeof state.daily !== 'object') state.daily = { date: '', items: {} };
+  if (!state.daily.items) state.daily.items = {};
+  if (!state.quitDate) state.quitDate = todayKey();
+  if (typeof state.why1 !== 'string') state.why1 = '';
+  if (typeof state.why2 !== 'string') state.why2 = '';
+
+  // Сброс ежедневных галочек в новый день
+  if (state.daily.date !== todayKey()) {
+    state.daily = { date: todayKey(), items: {} };
+    save();
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var planInputs = Array.prototype.slice.call(document.querySelectorAll('.sec:not(.noplan) input[type="checkbox"]'));
+  var dailyInputs = Array.prototype.slice.call(document.querySelectorAll('input[data-daily]'));
+
+  /* ---------- тема ---------- */
+  var root = document.documentElement;
+  var themeBtn = $('themeBtn');
+  function applyTheme(t) {
+    root.setAttribute('data-theme', t);
+    state.theme = t;
+    themeBtn.textContent = t === 'dark' ? '☀' : '☾';
+    save();
+  }
+  applyTheme(root.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+  themeBtn.addEventListener('click', function () {
+    applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  /* ---------- день ---------- */
+  var dateInput = $('quitDate');
+  var dayBadge = $('dayBadge');
+  var heroSub = $('heroSub');
+  var cleanStat = $('cleanStat');
+
+  function renderDay() {
+    var q = state.quitDate;
+    if (!q) {
+      dayBadge.textContent = 'Дата не задана';
+      heroSub.textContent = 'Выбери дату отказа — и план подстроится.';
+      cleanStat.textContent = '0';
+      return;
+    }
+    var parts = q.split('-').map(Number);
+    var qd = new Date(parts[0], parts[1] - 1, parts[2]);
+    var now = new Date();
+    var t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var diff = Math.round((t0 - qd) / 86400000);
+
+    var sub;
+    if (diff < 0) {
+      dayBadge.textContent = 'Старт через ' + (-diff) + ' дн.';
+      sub = 'Подготовься: выброси вейп, собери замены, скажи близким.';
+      cleanStat.textContent = '0';
+    } else {
+      dayBadge.textContent = 'День ' + (diff + 1);
+      cleanStat.textContent = String(diff);
+      if (diff <= 2) sub = 'Физический пик. Только сегодня. Тяга — волна на 3–5 минут.';
+      else if (diff <= 6) sub = 'Физика отпускает. Начинается работа с ритуалами.';
+      else if (diff <= 27) sub = 'Психологическая «стена». Не тестируй себя одной затяжкой.';
+      else sub = 'Ты не курящий. Держи правило нуля.';
+    }
+    heroSub.textContent = sub;
+
+    var d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    $('todayDate').textContent = 'Сегодня, ' + d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) + ' · сбрасывается утром';
+
+    dateInput.value = q;
+  }
+
+  dateInput.value = state.quitDate || '';
+  dateInput.addEventListener('change', function () {
+    state.quitDate = dateInput.value;
+    save();
+    renderDay();
+    autoOpenPhase();
+  });
+
+  /* ---------- прогресс ---------- */
+  var ringFg = $('ringFg');
+  ringFg.style.strokeDasharray = C.toFixed(2);
+  ringFg.style.strokeDashoffset = C.toFixed(2);
+
+  function sectionStats(sec) {
+    var inputs = sec.querySelectorAll('input[type="checkbox"]');
+    var done = 0;
+    for (var i = 0; i < inputs.length; i++) if (inputs[i].checked) done++;
+    var cnt = sec.querySelector('[data-cnt]');
+    var bar = sec.querySelector('[data-bar]');
+    if (cnt) cnt.textContent = done + ' / ' + inputs.length;
+    if (bar) bar.style.width = (inputs.length ? (done / inputs.length * 100) : 0) + '%';
+    sec.classList.toggle('done', inputs.length > 0 && done === inputs.length);
+    return { done: done, total: inputs.length };
+  }
+
+  function updateProgress() {
+    var done = 0;
+    for (var i = 0; i < planInputs.length; i++) if (planInputs[i].checked) done++;
+    var total = planInputs.length;
+    var pct = total ? Math.round(done / total * 100) : 0;
+    $('planPct').textContent = pct + '%';
+    $('planStat').textContent = pct + '%';
+    ringFg.style.strokeDashoffset = (C * (1 - pct / 100)).toFixed(2);
+
+    var secs = document.querySelectorAll('.sec');
+    for (var j = 0; j < secs.length; j++) sectionStats(secs[j]);
+
+    var dDone = 0;
+    for (var k = 0; k < dailyInputs.length; k++) if (dailyInputs[k].checked) dDone++;
+    $('dailyCnt').textContent = dDone + ' / ' + dailyInputs.length;
+    $('todayStat').textContent = dDone + ' / ' + dailyInputs.length;
+    $('dailyBar').style.width = (dailyInputs.length ? (dDone / dailyInputs.length * 100) : 0) + '%';
+  }
+
+  planInputs.forEach(function (input) {
+    var id = input.getAttribute('data-id');
+    input.checked = !!state.checks[id];
+    input.addEventListener('change', function () {
+      if (input.checked) state.checks[id] = true;
+      else delete state.checks[id];
+      save();
+      updateProgress();
+    });
+  });
+
+  dailyInputs.forEach(function (input) {
+    var id = input.getAttribute('data-daily');
+    input.checked = !!state.daily.items[id];
+    input.addEventListener('change', function () {
+      if (input.checked) state.daily.items[id] = true;
+      else delete state.daily.items[id];
+      save();
+      updateProgress();
+    });
+  });
+
+  updateProgress();
+  renderDay();
+
+  /* ---------- чипы ---------- */
+  document.querySelectorAll('.chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      var target = document.getElementById(chip.getAttribute('data-target'));
+      if (!target) return;
+      if (target.tagName === 'DETAILS') target.open = true;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  function phaseId() {
+    var q = state.quitDate;
+    if (!q) return 'prep';
+    var p = q.split('-').map(Number);
+    var qd = new Date(p[0], p[1] - 1, p[2]);
+    var n = new Date();
+    var t0 = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    var diff = Math.round((t0 - qd) / 86400000);
+    if (diff <= -1) return 'prep';
+    if (diff <= 2) return 'd13';
+    if (diff <= 6) return 'd47';
+    if (diff <= 27) return 'w24';
+    return 'm23';
+  }
+
+  function autoOpenPhase() {
+    var el = document.getElementById(phaseId());
+    if (!el) return;
+    if (el.tagName === 'DETAILS') el.open = true;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Открываем актуальный раздел при запуске
+  var initialPhase = document.getElementById(phaseId());
+  if (initialPhase && initialPhase.tagName === 'DETAILS') initialPhase.open = true;
+
+  /* ---------- причина ---------- */
+  var why1 = $('why1');
+  var why2 = $('why2');
+  why1.value = state.why1;
+  why2.value = state.why2;
+  why1.addEventListener('input', function () { state.why1 = why1.value; save(); });
+  why2.addEventListener('input', function () { state.why2 = why2.value; save(); });
+
+  /* ---------- шапка при скролле ---------- */
+  var topbar = $('topbar');
+  window.addEventListener('scroll', function () {
+    topbar.classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive: true });
+
+  /* ---------- экстренная помощь ---------- */
+  var overlay = $('helpModal');
+  var timerEl = $('timer');
+  var timerStatus = $('timerStatus');
+  var timerToggle = $('timerToggle');
+  var breathEl = $('breath');
+  var breathBtn = $('breathBtn');
+  var helpBtn = $('helpBtn');
+
+  var remaining = TIMER_MS;
+  var endsAt = 0;
+  var timerId = null;
+  var running = false;
+
+  function fmt(ms) {
+    var s = Math.ceil(ms / 1000);
+    return pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+  }
+  function renderTimer() { timerEl.textContent = fmt(remaining); }
+  function tick() {
+    remaining = Math.max(0, endsAt - Date.now());
+    renderTimer();
+    if (remaining <= 0) {
+      clearInterval(timerId);
+      timerId = null;
+      running = false;
+      timerToggle.textContent = 'Ещё раз';
+      timerStatus.textContent = 'Волна прошла. Ты справился.';
+    }
+  }
+  function startTimer() {
+    if (running || remaining <= 0) {
+      if (remaining <= 0) remaining = TIMER_MS;
+      if (running) return;
+    }
+    running = true;
+    endsAt = Date.now() + remaining;
+    clearInterval(timerId);
+    timerId = setInterval(tick, 250);
+    timerToggle.textContent = 'Пауза';
+    timerStatus.textContent = 'Дыши и ничего не решай.';
+    renderTimer();
+  }
+  function pauseTimer() {
+    if (!running) return;
+    running = false;
+    clearInterval(timerId);
+    timerId = null;
+    remaining = Math.max(0, endsAt - Date.now());
+    renderTimer();
+    timerToggle.textContent = 'Продолжить';
+    timerStatus.textContent = 'Пауза.';
+  }
+  function resetTimer() {
+    running = false;
+    clearInterval(timerId);
+    timerId = null;
+    remaining = TIMER_MS;
+    renderTimer();
+    timerToggle.textContent = 'Старт';
+    timerStatus.textContent = '10 минут — и волна спадёт.';
+  }
+
+  timerToggle.addEventListener('click', function () {
+    if (running) pauseTimer(); else startTimer();
+  });
+  $('timerReset').addEventListener('click', resetTimer);
+
+  breathBtn.addEventListener('click', function () {
+    var on = breathEl.classList.toggle('pulse');
+    breathBtn.textContent = on ? 'Остановить' : 'Дышать';
+  });
+  function stopBreath() {
+    breathEl.classList.remove('pulse');
+    breathBtn.textContent = 'Дышать';
+  }
+
+  function renderModalWhy() {
+    var t = (state.why1 || '').trim();
+    $('modalWhy').textContent = t || 'Пока не заполнено — напиши её в блоке «Моя причина» на главной.';
+  }
+
+  function openHelp() {
+    overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    renderModalWhy();
+    stopBreath();
+    resetTimer();
+    startTimer();
+  }
+  function closeHelp() {
+    overlay.classList.remove('show');
+    document.body.style.overflow = '';
+    pauseTimer();
+    stopBreath();
+  }
+
+  helpBtn.addEventListener('click', openHelp);
+  $('helpBtnTop').addEventListener('click', openHelp);
+  $('closeHelp').addEventListener('click', closeHelp);
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeHelp();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('show')) closeHelp();
+  });
+
+  /* ---------- поделиться ---------- */
+  var shareBtn = $('shareBtn');
+  var host = location.hostname;
+  if ((location.protocol === 'http:' || location.protocol === 'https:') &&
+      host !== 'localhost' && host !== '127.0.0.1' && host !== '::1') {
+    shareBtn.hidden = false;
+    shareBtn.addEventListener('click', function () {
+      var url = location.href.split('#')[0];
+      if (navigator.share) {
+        navigator.share({ title: 'Я не курю — чек-лист', url: url }).catch(function () {});
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () {
+          var label = shareBtn.textContent;
+          shareBtn.textContent = 'Ссылка скопирована';
+          window.setTimeout(function () { shareBtn.textContent = label; }, 1800);
+        }).catch(function () { window.prompt('Скопируй ссылку:', url); });
+      } else {
+        window.prompt('Скопируй ссылку:', url);
+      }
+    });
+  }
+
+  /* ---------- сброс ---------- */
+  var restartBtn = $('restartBtn');
+  if (restartBtn) {
+    restartBtn.addEventListener('click', function () {
+      if (!confirm('Начать заново с сегодня? Отметки плана останутся.')) return;
+      state.quitDate = todayKey();
+      state.daily = { date: todayKey(), items: {} };
+      dailyInputs.forEach(function (i) { i.checked = false; });
+      save();
+      dateInput.value = state.quitDate;
+      renderDay();
+      updateProgress();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  $('resetChecks').addEventListener('click', function () {
+    if (!confirm('Сбросить все отметки? Дата отказа и причина останутся.')) return;
+    state.checks = {};
+    state.daily = { date: todayKey(), items: {} };
+    planInputs.forEach(function (i) { i.checked = false; });
+    dailyInputs.forEach(function (i) { i.checked = false; });
+    save();
+    updateProgress();
+  });
+  $('resetAll').addEventListener('click', function () {
+    if (!confirm('Сбросить всё, включая дату отказа и причину?')) return;
+    try { localStorage.removeItem(KEY); } catch (e) { /* noop */ }
+    location.reload();
+  });
+
+  /* ---------- смена дня ---------- */
+  function refreshDailyIfNeeded() {
+    if (state.daily.date === todayKey()) return;
+    state.daily = { date: todayKey(), items: {} };
+    dailyInputs.forEach(function (i) { i.checked = false; });
+    save();
+    updateProgress();
+    renderDay();
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) refreshDailyIfNeeded();
+  });
+  window.setInterval(refreshDailyIfNeeded, 60000);
+
+  renderTimer();
+})();
+</script>
+</body>
+</html>
